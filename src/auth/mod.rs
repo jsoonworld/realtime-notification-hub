@@ -1,1 +1,5 @@
-// JWT authentication and AuthUser extractor (Phase 10-B)
+pub mod jwt;
+pub mod extractor;
+
+pub use extractor::AuthUser;
+pub use jwt::Claims;

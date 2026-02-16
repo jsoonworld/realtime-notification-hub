@@ -2,6 +2,7 @@ pub mod config;
 pub mod auth;
 pub mod error;
 pub mod response;
+pub mod state;
 pub mod sse;
 pub mod redis_pubsub;
 pub mod redis_streams;

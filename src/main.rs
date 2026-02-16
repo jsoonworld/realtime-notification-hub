@@ -4,7 +4,8 @@ use axum_prometheus::PrometheusMetricLayer;
 use tower_http::cors::{AllowHeaders, AllowMethods, AllowOrigin, CorsLayer};
 use tower_http::trace::TraceLayer;
 
-use realtime_notification_hub::config::AppConfig;
+use realtime_notification_hub::config::{AppConfig, create_redis_pool};
+use realtime_notification_hub::state::AppState;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -25,6 +26,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let config = AppConfig::from_env()?;
     let port = config.server_port;
+
+    // Initialize Redis connection
+    let redis_pool = create_redis_pool(&config.redis_url).await?;
+
+    // Build AppState
+    let app_state = AppState {
+        config: config.clone(),
+        redis_pool,
+        start_time: std::time::Instant::now(),
+    };
 
     // Prometheus metrics
     let (prometheus_layer, metric_handle) = PrometheusMetricLayer::pair();
@@ -51,7 +62,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .nest("/api/v1", api_v1_routes)
         .layer(TraceLayer::new_for_http())
         .layer(prometheus_layer)
-        .layer(cors);
+        .layer(cors)
+        .with_state(app_state);
 
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port)).await?;
     tracing::info!("Notification Hub 시작: http://0.0.0.0:{}", port);
