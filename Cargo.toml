@@ -46,8 +46,11 @@ dotenvy = "0.15"
 
 # Async
 futures = "0.3"
-tokio-stream = "0.1"
+tokio-stream = { version = "0.1", features = ["sync"] }
 pin-project-lite = "0.2"
+
+# Concurrent data structures
+dashmap = "6"
 
 [dev-dependencies]
 tokio-test = "0.4"

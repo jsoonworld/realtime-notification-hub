@@ -5,6 +5,7 @@ use tower_http::cors::{AllowHeaders, AllowMethods, AllowOrigin, CorsLayer};
 use tower_http::trace::TraceLayer;
 
 use realtime_notification_hub::config::{AppConfig, create_redis_pool};
+use realtime_notification_hub::sse::{self, ConnectionManager};
 use realtime_notification_hub::state::AppState;
 
 #[tokio::main]
@@ -30,11 +31,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Initialize Redis connection
     let redis_pool = create_redis_pool(&config.redis_url).await?;
 
+    // Initialize SSE ConnectionManager
+    let connection_manager = ConnectionManager::new(config.sse_channel_capacity);
+
     // Build AppState
     let app_state = AppState {
         config: config.clone(),
         redis_pool,
         start_time: std::time::Instant::now(),
+        connection_manager: connection_manager.clone(),
     };
 
     // Prometheus metrics
@@ -54,8 +59,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }),
         );
 
-    // API v1 routes (placeholder for future phases)
-    let api_v1_routes = Router::new();
+    // API v1 routes
+    let api_v1_routes = Router::new()
+        .route("/rooms/:room_id/stream", get(sse::handler::stream_handler));
 
     let app = Router::new()
         .merge(public_routes)
@@ -65,12 +71,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .layer(cors)
         .with_state(app_state);
 
+    // Spawn SSE cleanup background task
+    let cleanup_handle = sse::cleanup::spawn_cleanup_task(connection_manager);
+
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port)).await?;
     tracing::info!("Notification Hub 시작: http://0.0.0.0:{}", port);
 
     axum::serve(listener, app)
         .with_graceful_shutdown(shutdown_signal())
         .await?;
+
+    cleanup_handle.abort();
+    tracing::info!("Cleanup 태스크 종료 완료");
 
     Ok(())
 }
