@@ -1,0 +1,59 @@
+[package]
+name = "realtime-notification-hub"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+
+[dependencies]
+# Web Framework + SSE
+axum = { version = "0.7", features = ["json", "macros"] }
+axum-extra = { version = "0.9", features = ["cookie"] }
+tokio = { version = "1", features = ["full"] }
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors", "trace"] }
+
+# Redis
+redis = { version = "0.27", features = ["tokio-comp", "aio", "streams"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Auth
+jsonwebtoken = { version = "10.2", features = ["rust_crypto"] }
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json", "time"] }
+time = { version = "0.3", features = ["formatting"] }
+
+# Monitoring
+axum-prometheus = "0.7"
+metrics = "0.24"
+metrics-exporter-prometheus = "0.16"
+
+# Date/Time
+chrono = { version = "0.4", features = ["serde"] }
+
+# UUID
+uuid = { version = "1.0", features = ["v4", "serde"] }
+
+# Error
+thiserror = "1.0"
+
+# Environment
+dotenvy = "0.15"
+
+# Async
+futures = "0.3"
+tokio-stream = "0.1"
+pin-project-lite = "0.2"
+
+[dev-dependencies]
+tokio-test = "0.4"
+tower = { version = "0.5", features = ["util"] }
+http-body-util = "0.1"
+hyper = "1.0"
+testcontainers = "0.23"
+testcontainers-modules = { version = "0.11", features = ["redis"] }
+fake = { version = "3.0", features = ["derive"] }

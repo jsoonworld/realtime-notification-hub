@@ -1,2 +1,15 @@
 # Implementation plan documents (local only)
 docs/implementation-plan/
+
+# Rust
+target/
+
+# Environment
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
